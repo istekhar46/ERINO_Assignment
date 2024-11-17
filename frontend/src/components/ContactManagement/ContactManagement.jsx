@@ -6,6 +6,7 @@ import {
   FiX,
   FiChevronUp,
   FiChevronDown,
+  FiUsers,
 } from "react-icons/fi";
 
 const ContactManagement = () => {
@@ -137,7 +138,7 @@ const ContactManagement = () => {
       const response = await fetch("/api/contacts");
       const data = await response.json();
       console.log("fetched :", data);
-      
+
       // Update state with the data from the API
       setContacts(data.contacts || []);
       setTotalPages(data.totalPages || 0);
@@ -162,12 +163,12 @@ const ContactManagement = () => {
   // Sort function with proper error handling
   const sortContacts = (contactsToSort) => {
     if (!Array.isArray(contactsToSort)) return [];
-    
+
     return [...contactsToSort].sort((a, b) => {
       if (!a || !b) return 0;
-      const aValue = (a[orderBy] || '').toString().toLowerCase();
-      const bValue = (b[orderBy] || '').toString().toLowerCase();
-      return order === 'asc' 
+      const aValue = (a[orderBy] || "").toString().toLowerCase();
+      const bValue = (b[orderBy] || "").toString().toLowerCase();
+      return order === "asc"
         ? aValue.localeCompare(bValue)
         : bValue.localeCompare(aValue);
     });
@@ -179,6 +180,30 @@ const ContactManagement = () => {
     const startIndex = page * rowsPerPage;
     return sortedContacts.slice(startIndex, startIndex + rowsPerPage);
   };
+  // Empty state component
+  const EmptyState = () => (
+    <div className="text-center py-16 px-4">
+      <div className="flex justify-center mb-4">
+        <div className="bg-blue-100 p-4 rounded-full">
+          <FiUsers className="w-12 h-12 text-blue-500" />
+        </div>
+      </div>
+      <h3 className="text-[1.8rem] font-semibold text-gray-900 mb-2">
+        No Contacts Yet
+      </h3>
+      <p className="text-[1.4rem] text-gray-500 mb-6 max-w-md mx-auto">
+        Get started by adding your first contact. Click the "Add Contact" button
+        above to create a new contact.
+      </p>
+      <button
+        onClick={() => setOpenForm(true)}
+        className="inline-flex items-center gap-2 text-[1.4rem] px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+      >
+        <FiPlus className="w-5 h-5" />
+        Add Your First Contact
+      </button>
+    </div>
+  );
 
   return (
     <div className="p-6 mx-auto h-[100vh]">
@@ -216,118 +241,131 @@ const ContactManagement = () => {
           )}
 
           <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  {[
-                    "First Name",
-                    "Last Name",
-                    "Email",
-                    "Phone Number",
-                    "Company",
-                    "Job Title",
-                    "Actions",
-                  ].map((header) => (
-                    <th
-                      key={header}
-                      className="px-6 py-3 text-left text-[1.2rem] font-medium text-gray-500 uppercase tracking-wider"
+            {contacts.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <>
+                <table className="min-w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {[
+                        "First Name",
+                        "Last Name",
+                        "Email",
+                        "Phone Number",
+                        "Company",
+                        "Job Title",
+                        "Actions",
+                      ].map((header) => (
+                        <th
+                          key={header}
+                          className="px-6 py-3 text-left text-[1.2rem] font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          {header !== "Actions" ? (
+                            <button
+                              className="flex items-center gap-1"
+                              onClick={() =>
+                                handleSort(
+                                  header.toLowerCase().replace(" ", "")
+                                )
+                              }
+                            >
+                              {header}
+                              {orderBy ===
+                                header.toLowerCase().replace(" ", "") &&
+                                (order === "asc" ? (
+                                  <FiChevronUp className="w-4 h-4" />
+                                ) : (
+                                  <FiChevronDown className="w-4 h-4" />
+                                ))}
+                            </button>
+                          ) : (
+                            header
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {getCurrentPageContacts().map((contact) => (
+                      <tr
+                        key={contact.id}
+                        className="hover:bg-gray-50 text-[1.6rem] text-black"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {contact.firstName}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {contact.lastName}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {contact.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {contact.phoneNumber}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {contact.company}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {contact.jobTitle}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleEdit(contact)}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              <FiEdit2 className="w-10 h-10" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(contact._id)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <FiTrash2 className="w-10 h-10" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="text-[1.2rem] px-6 py-3 flex items-center justify-between border-t border-gray-200">
+                  <div className="flex items-center">
+                    <select
+                      value={rowsPerPage}
+                      onChange={handleChangeRowsPerPage}
+                      className="border rounded px-2 py-1"
                     >
-                      {header !== "Actions" ? (
-                        <button
-                          className="flex items-center gap-1"
-                          onClick={() =>
-                            handleSort(header.toLowerCase().replace(" ", ""))
-                          }
-                        >
-                          {header}
-                          {orderBy === header.toLowerCase().replace(" ", "") &&
-                            (order === "asc" ? (
-                              <FiChevronUp className="w-4 h-4" />
-                            ) : (
-                              <FiChevronDown className="w-4 h-4" />
-                            ))}
-                        </button>
-                      ) : (
-                        header
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {getCurrentPageContacts().map((contact) => (
-                  <tr key={contact.id} className="hover:bg-gray-50 text-[1.6rem] text-black">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {contact.firstName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {contact.lastName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {contact.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {contact.phoneNumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {contact.company}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {contact.jobTitle}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEdit(contact)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <FiEdit2 className="w-10 h-10" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(contact._id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <FiTrash2 className="w-10 h-10" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="text-[1.2rem] px-6 py-3 flex items-center justify-between border-t border-gray-200">
-              <div className="flex items-center">
-                <select
-                  value={rowsPerPage}
-                  onChange={handleChangeRowsPerPage}
-                  className="border rounded px-2 py-1"
-                >
-                  {[5, 10, 25].map((n) => (
-                    <option key={n} value={n}>
-                      {n} per page
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleChangePage(page - 1)}
-                  disabled={page === 0}
-                  className="text-[1.4rem] text-black px-3 py-1 border rounded disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => handleChangePage(page + 1)}
-                  disabled={
-                    page >= Math.ceil((contacts?.length || 0) / rowsPerPage) - 1
-                  }
-                  className="text-[1.4rem] text-black px-3 py-1 border rounded disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
+                      {[5, 10, 25].map((n) => (
+                        <option key={n} value={n}>
+                          {n} per page
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleChangePage(page - 1)}
+                      disabled={page === 0}
+                      className="text-[1.4rem] text-black px-3 py-1 border rounded disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => handleChangePage(page + 1)}
+                      disabled={
+                        page >=
+                        Math.ceil((contacts?.length || 0) / rowsPerPage) - 1
+                      }
+                      className="text-[1.4rem] text-black px-3 py-1 border rounded disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
