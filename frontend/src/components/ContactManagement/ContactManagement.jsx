@@ -137,7 +137,6 @@ const ContactManagement = () => {
     try {
       const response = await fetch("/api/contacts");
       const data = await response.json();
-      console.log("fetched :", data);
 
       // Update state with the data from the API
       setContacts(data.contacts || []);
@@ -215,7 +214,7 @@ const ContactManagement = () => {
             </h1>
             <button
               onClick={() => setOpenForm(true)}
-              className="flex items-center gap-2 text-[1.4rem] px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              className="flex items-center gap-2 text-[1.4rem] px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 transition-colors rounded-[0.5rem]"
             >
               <FiPlus className="w-6 h-6" />
               Add Contact
@@ -289,7 +288,7 @@ const ContactManagement = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {getCurrentPageContacts().map((contact) => (
                       <tr
-                        key={contact.id}
+                        key={contact._id}
                         className="hover:bg-gray-50 text-[1.6rem] text-black"
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
